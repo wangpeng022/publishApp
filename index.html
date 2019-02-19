@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>publicapp</title>
+    <script>
+      ~function () {
+          window.addEventListener('resize', computed, false);
+          computed();
+          function computed() {
+              var deviceW = document.documentElement.clientWidth;
+              console.log(deviceW);
+              if (deviceW > 320) {
+                  document.documentElement.style.fontSize = 100 + 'px';
+                  //console.log(document.documentElement.style.fontSize);
+              } else {
+                  document.documentElement.style.fontSize = deviceW / 320 * 100 + 'px';
+              }
+          }
+      }();
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <!-- built files will be auto injected -->
+  </body>
+</html>
