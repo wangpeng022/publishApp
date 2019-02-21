@@ -1,4 +1,4 @@
-# publicapp
+# publishapp
 
 > A Vue.js project
 
