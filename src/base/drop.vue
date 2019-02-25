@@ -43,10 +43,10 @@ export default {
         min-height: 30px;
     }
     .drop .drop_header .left{
-        float: left;
+        /* float: left; */
     }
     .drop .drop_header .right{
-        float: right;
+        /* float: right; */
     }
     .drop_describe{
         border-top: 1px solid #000;

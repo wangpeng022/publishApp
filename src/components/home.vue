@@ -15,7 +15,7 @@
           <div class="code" index='is' v-show="codeShow">
             <!-- <canvas id="canvas"></canvas> -->
             <div class="img"  index='is'>
-              <img ref="code" id="code_img"  index='is' src alt>
+              <img ref="code" id="code_img"  index='is' src=''>
               <!-- <div class="icon"></div> -->
             </div>
             <i-button style="width:1.5rem" @click="saveCode('code')">保存二维码</i-button>
@@ -30,6 +30,14 @@
         <drop></drop>
       </div>
     </div>
+    <div class="ivu-modal-mask" style="z-index: 1003" v-show="box_WX">
+      <div class="content_box">
+        <img ref="code_a" src=''>
+        <div class="close">
+          <Icon type="md-close" @click="box_WX=false"/>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -39,25 +47,26 @@ import QRCode from "qrcode";
 export default {
   data() {
     return {
-      codeShow: false
+      isWX: false,
+      isAndroid: false,
+      isIOS: false,
+      isIphone: false,
+      codeShow: false,
+      box_WX: false
     };
   },
   components: {
-    drop
+    drop,
   },
   mounted() {
     var u = navigator.userAgent;
-    var isAndroid = u.indexOf("Android") > -1 || u.indexOf("Adr") > -1; //android终端
-    var isiOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/); //ios终端
-    console.log(u);
-    // alert(u);
-    document.body.addEventListener('click',(e)=>{
-      console.log(e.target.getAttribute('index'));
-      var key = e.target.getAttribute('index')||false;
-        if(key!='is'){
-          this.codeShow = false;
-        }
-    })
+    this.isWX = u.indexOf("MicroMessenger") > -1 ; //微信终端
+    this.isAndroid = u.indexOf("Android") > -1 || u.indexOf("Adr") > -1; //android终端
+    this.isIOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/); //ios终端
+    this.isIphone = u.indexOf("iPhone") > -1; //ios终端
+
+    console.log(this.$route.params.id);
+    
   },
   methods: {
     //下载apk
@@ -104,10 +113,6 @@ export default {
 
     //动态生成二维码
     useqrcode() {
-      this.codeShow = !this.codeShow;
-      if (!this.codeShow) {
-        return;
-      }
       //生成的二维码内容，可以添加变量
       //this.QueryDetail='http://www.kspxzx.com/#/guard'+"?unique_code="+this.QueryDetail;
       this.QueryDetail = window.location.href;
@@ -119,11 +124,42 @@ export default {
       var opts = {
         errorCorrectionLevel: "H",
         type: "image/jpeg",
+        width: 300,
+        height: 300,
         rendererOpts: {
           quality: 0.3
         }
-      };
-      QRCode.toDataURL(this.QueryDetail, opts)
+      };      
+      if (this.isWX||this.isIphone) {
+        QRCode.toDataURL(this.QueryDetail, opts)
+        .then(url => {
+          this.$refs.code_a.src = url;
+        })
+        .catch(err => {
+          console.error(err);
+        });
+        this.box_WX = true;
+        return
+      }
+      this.codeShow = !this.codeShow;
+      if (!this.codeShow) {
+        document.body.removeEventListener('click');
+        return;
+      }
+      document.body.addEventListener('click',(e)=>{
+      var key = e.target.getAttribute('index')||false;
+        if(key!='is'){
+          this.codeShow = false;
+        }
+    })
+      QRCode.toDataURL(this.QueryDetail, {
+        errorCorrectionLevel: "H",
+        type: "image/jpeg",
+        width: 160,
+        height: 160,
+        rendererOpts: {
+          quality: 0.3
+        }})
         .then(url => {
           console.log(url);
           this.$refs.code.src = url;
@@ -182,6 +218,29 @@ export default {
     body {
         /* background-color:lightblue; */
     }
+    .drop_header{
+      display: flex;
+      display: -webkit-flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+}
+@media screen and (min-width: 376px) {
+    .drop_header{
+      display: flex;
+      display: -webkit-flex;
+      flex-direction: row;
+      justify-content: space-between;
+    }
+}
+.drop_header{
+  /* display: flex;
+  display: -webkit-flex;
+  flex-direction: row;
+  justify-content: space-between; */
+}
+.drop_header div{
+  min-width: 180px;
 }
 .content {
   padding: 0.1px;
@@ -194,7 +253,7 @@ export default {
   background: #e4e4e4;
   text-align: center;
 }
-.logo {
+.header .logo {
   width: 1.25rem;
   height: 1.25rem;
   border: 1px solid black;
@@ -243,4 +302,24 @@ export default {
   height: 0.4rem;
   background: lightblue;
 }
+  .content_box{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    width: 250px;
+    height: 300px;
+    /* background: #fff; */
+  }
+  .content_box img{
+    width: 100%;
+  }
+  .close{
+    position: absolute;
+    bottom: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: .2rem;
+    color: #fff;
+  }
 </style>

@@ -6,7 +6,17 @@
 
 <script>
 export default {
-  name: 'App'
+  name: 'App',
+  data(){
+    return {
+      lasted: '3.2'
+    }
+  },
+  mounted(){
+    //获取最新版本
+    // this.$router.push('/home/'+this.lasted);
+    
+  }
 }
 </script>
 
