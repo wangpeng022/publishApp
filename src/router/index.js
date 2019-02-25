@@ -3,6 +3,7 @@ import Router from 'vue-router'
 import home from '@/components/home'
 import cms from '@/components/cms'
 import details from '@/components/cms/details'
+import addNew from '@/components/cms/addNew'
 
 Vue.use(Router)
 
@@ -24,10 +25,10 @@ export default new Router({
           path: 'details',
           component: details
         },
-        // {
-        //   path: 'posts',
-        //   component: UserPosts
-        // }
+        {
+          path: 'addNew',
+          component: addNew
+        }
       ]
     },
   ]

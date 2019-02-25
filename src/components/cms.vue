@@ -2,11 +2,11 @@
   <div class="cms">
     <div class="left">
         <div class="logo"></div>
-        <div class="add">
+        <div class="add" @click="addNew">
             <Icon type="ios-add-circle-outline" />
             <span> 添加新应用</span>
         </div>
-        <Menu width="auto">
+        <Menu width="auto" style="background: #F0EDF7;">
             <Submenu name="1">
                 <template slot="title">
                     MEOS 设备设施
@@ -41,11 +41,6 @@
         </Menu>
     </div>
     <div class="right">
-        <!-- <Steps :current="1">
-            <Step title="已完成" content="上传安装包"></Step>
-            <Step title="进行中" content="填写应用信息"></Step>
-            <Step title="待进行" content="完成"></Step>
-        </Steps> -->
         <router-view/>
     </div>
     <Drawer title="Basic Drawer" :closable="true" v-model="showDrawer">
@@ -65,6 +60,11 @@ export default {
    },
    components: {
 
+   },
+   methods: {
+       addNew(){
+           this.$router.push('/cms/addNew')
+       }
    }
 }
 </script>
@@ -102,7 +102,7 @@ export default {
     .cms .right{
         height: 100%;
         padding-left: 3.2rem;
-        /* margin: .35rem .35rem 0; */
+        background: #f7f7fd;
     } 
  
 </style>
