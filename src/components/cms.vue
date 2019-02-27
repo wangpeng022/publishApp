@@ -100,7 +100,7 @@ export default {
         background: #434e97
     }
     .cms .right{
-        height: 100%;
+        /* height: 100%; */
         padding-left: 3.2rem;
         background: #f7f7fd;
     } 
