@@ -5,6 +5,8 @@ import cms from '@/components/cms'
 import details from '@/components/cms/details'
 import addNew from '@/components/cms/addNew'
 import gather from '@/components/gather'
+import mobile from '@/components/mobile'
+import gather_mobile from '@/components/gather_mobile'
 
 Vue.use(Router)
 
@@ -36,6 +38,16 @@ export default new Router({
       path: '/gather',
       name: 'gather',
       component: gather,
+    },
+    {
+      path: '/mobile',
+      name: 'mobile',
+      component: mobile,
+    },
+    {
+      path: '/gather_mobile',
+      name: 'gather_mobile',
+      component: gather_mobile,
     },
   ]
 })

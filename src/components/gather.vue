@@ -1,38 +1,38 @@
+/******************************************
+* @author: 王鹏(wangpeng022@sina.cn)
+* @createDate:2019/3/5
+* @Description: PC app集合页
+******************************************/
 <template>
   <div class="gather_content">
     <div class="header"></div>
-    <div class="cont_body">
+    <div class="gather_content_body">
       <h2>meos系列产品</h2>
       <Select v-model="defaultVer" class="change_version" style="width:130px">
         <Option v-for="item in classList" :value="item.value" :key="item.value">{{ item.label }}</Option>
       </Select>
-      <div class="cont_body_box">
-        <!-- <drop></drop>
-        <drop></drop> -->
+      <div class="gather_content_body_box">
+        <itemcard></itemcard>
+        <itemcard></itemcard>
+        <itemcard></itemcard>
+        <itemcard></itemcard>
+        <itemcard></itemcard>
+        <itemcard></itemcard>
+        <itemcard></itemcard>
+        <itemcard></itemcard>
+
       </div>
     </div>
     <div class="footer">
       <p>技术支持：北京博锐尚格-MEOS</p>
       <p>© 2016 Persagy. All rights reserved 京ICP备 09030380 号</p>
     </div>
-    <Modal
-      class="iphone"
-      v-model="modal_iphone"
-      @on-ok="modal_iphone=false"
-      @on-cancel="modal_iphone=false"
-      width="354"
-      >
-      <p>请在手机上打开</p>
-      <p>请复制该链接，并在手机上使用浏览器打开，或者通过扫描二维码下载安装。</p>
-      <div class="footer">
-        <Button type="primary" style="width:100px"  v-clipboard:copy="copyValue" v-clipboard:success="onCopy">复制链接</Button>
-      </div>
-    </Modal>
   </div>
 </template>
 
 <script>
 import drop from "../base/drop";
+import itemcard from "../base/itemcard";
 import QRCode from "qrcode";
 export default {
   data() {
@@ -41,25 +41,21 @@ export default {
       isAndroid: false,
       isIOS: false,
       isIphone: false,
-      codeShow: false,
-      box_WX: false,
-      modal_iphone: false,//iphone按钮提示弹窗
-      copyValue: 'www.baidu.com',
       classList: [
         {
-          value: "iPhone 版本",
-          label: "iPhone 版本"
+          value: "切换系列",
+          label: "切换系列"
         },
         {
           value: "Android 版本",
           label: "Android 版本"
         }
       ],
-      defaultVer: "iPhone 版本"
+      defaultVer: "切换系列"
     };
   },
   components: {
-    drop
+    drop,itemcard
   },
   mounted() {
     var u = navigator.userAgent;
@@ -251,22 +247,37 @@ export default {
   text-align: center;
   color: #fff;
 }
-.cont_body {
+.gather_content_body {
   position: relative;
   /* max-width: 80%; */
   width: 11rem;
   margin: 0.6rem auto 0;
+  padding-bottom: 100px;
 }
-.cont_body .change_version {
+.gather_content_body .change_version {
   position: absolute;
   top: 0;
   right: 0;
 }
-.cont_body h2 {
+.gather_content_body .change_version .ivu-select-selection{
+  border: none;
+  background: #f5f5f5;
+}
+.gather_content_body .change_version .ivu-select-selection{
+  box-shadow: none;
+}
+.gather_content_body h2 {
   font-family: PingFangSC-Regular;
   font-size: 28px;
   color: #363f80;
   letter-spacing: 0;
+}
+.gather_content_body_box{
+  display: flex;
+  flex-wrap: wrap;
+  width: 1100px;
+  min-height: 284px;
+  background: #fff;
 }
 .btns .download {
   position: relative;
@@ -375,26 +386,5 @@ export default {
   transform: translateX(-50%);
   font-size: 0.2rem;
   color: #fff;
-}
-
-/* iphone提示弹窗 */
-.iphone {
-  text-align: center;
-}
-.iphone .ivu-icon-ios-alert-outline {
-  font-size: 90px;
-  color: #ea3715;
-}
-.iphone .ivu-modal-body {
-  padding: .26rem .45rem .23rem;
-}
-.iphone .ivu-modal-body p {
-  font-size: .14rem;
-}
-.iphone .ivu-modal-footer {
-  display: none;
-}
-.iphone .footer {
-  padding-top: .23rem;
 }
 </style>

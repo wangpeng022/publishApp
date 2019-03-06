@@ -1,3 +1,8 @@
+/******************************************
+* @author: 王鹏(wangpeng022@sina.cn)
+* @createDate:2019/3/5
+* @Description: PC后台管理页
+******************************************/
 <template>
   <div class="cms">
     <div class="left">
@@ -6,37 +11,12 @@
             <Icon type="ios-add-circle-outline" />
             <span> 添加新应用</span>
         </div>
-        <Menu width="auto" style="background: #F0EDF7;">
-            <Submenu name="1">
+        <Menu width="auto" style="background: #F0EDF7;" @on-select='menuChange'>
+            <Submenu :name="item.id" v-for="item in dataList" :key="item.id">
                 <template slot="title">
-                    MEOS 设备设施
+                    {{item.name}}
                 </template>
-                <MenuItem name="1-1">
-                设备设施-新城
-                </MenuItem>
-                <MenuItem name="1-2">设备设施-新城</MenuItem>
-                <MenuItem name="1-3">设备设施-新城</MenuItem>
-            </Submenu>
-            <Submenu name="2">
-                <template slot="title">
-                    租户管理系统
-                </template>
-                <MenuItem name="2-1">租户管理系统-11</MenuItem>
-                <MenuItem name="2-2">租户管理系统-22</MenuItem>
-            </Submenu>
-            <Submenu name="3">
-                <template slot="title">
-                    配电管理系统
-                </template>
-                <MenuGroup title="使用">
-                    <MenuItem name="3-1">配电管理系统-11</MenuItem>
-                    <MenuItem name="3-2">配电管理系统-22</MenuItem>
-                    <MenuItem name="3-3">配电管理系统-33</MenuItem>
-                </MenuGroup>
-                <MenuGroup title="留存">
-                    <MenuItem name="3-4">用户留存</MenuItem>
-                    <MenuItem name="3-5">流失用户</MenuItem>
-                </MenuGroup>
+                <MenuItem v-for="item in item.apps" :key="item.id" :name="item.id">{{item.name}}</MenuItem>
             </Submenu>
         </Menu>
     </div>
@@ -52,10 +32,13 @@
 </template>
 
 <script>
+import axios from "axios";
+import qs from "qs";
 export default {
    data () {
      return {
-        showDrawer: false
+        showDrawer: false,
+        dataList: []
      }
    },
    components: {
@@ -64,7 +47,19 @@ export default {
    methods: {
        addNew(){
            this.$router.push('/cms/addNew')
+       },
+       menuChange(id){
+        console.log(id);
+        this.$router.push({ path: '/cms/details', query: { id }});
+        
        }
+   },
+   mounted(){
+    axios.post('/api/AppListService',qs.stringify({"jsonString": JSON.stringify({})})).then(res=>{
+      var result = res.data.content;
+    //   console.log(result);
+      this.dataList = result
+    }).catch(err=>console.log(err));
    }
 }
 </script>
@@ -100,7 +95,7 @@ export default {
         background: #434e97
     }
     .cms .right{
-        /* height: 100%; */
+        min-height: 100%;
         padding-left: 3.2rem;
         background: #f7f7fd;
     } 

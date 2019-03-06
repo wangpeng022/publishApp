@@ -1,3 +1,8 @@
+/******************************************
+* @author: 王鹏(wangpeng022@sina.cn)
+* @createDate:2019/3/5
+* @Description: PC详情页
+******************************************/
 <template>
   <div class="content">
     <div class="header">
@@ -15,8 +20,6 @@
             type="button"
             class="ivu-btn ivu-btn-default"
             @click="useqrcode"
-            @mouseover="useqrcode"
-            @mouseout="1"
             index="is"
           >
             <span index="is">二维码下载</span>
@@ -88,6 +91,8 @@
 <script>
 import drop from "../base/drop";
 import QRCode from "qrcode";
+import axios from "axios";
+import qs from "qs";
 export default {
   data() {
     return {
@@ -116,6 +121,9 @@ export default {
     drop
   },
   mounted() {
+    // axios.post('/api/ProductListService',qs.stringify({"jsonString": JSON.stringify({})})).then(res=>{
+    //   console.log(res.data.content);
+    // }).catch(err=>console.log(err));
     var u = navigator.userAgent;
     this.isWX = u.indexOf("MicroMessenger") > -1; //微信终端
     this.isAndroid = u.indexOf("Android") > -1 || u.indexOf("Adr") > -1; //android终端
@@ -345,6 +353,13 @@ export default {
   position: absolute;
   top: 0;
   right: 0;
+}
+.cont_body .change_version .ivu-select-selection{
+  border: none;
+  background: #f5f5f5;
+}
+.cont_body .change_version .ivu-select-selection{
+  box-shadow: none;
 }
 .cont_body h2 {
   font-family: PingFangSC-Regular;

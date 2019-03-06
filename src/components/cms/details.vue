@@ -1,3 +1,8 @@
+/******************************************
+* @author: 王鹏(wangpeng022@sina.cn)
+* @createDate:2019/3/5
+* @Description: PC 后台管理 应用详情页
+******************************************/
 <template>
   <div class="details">
     <div class="header">
@@ -5,16 +10,17 @@
         <img src alt>
       </div>
       <div class="header_body">
-        <h1>设备设施-新城控股</h1>
-        <p>简介：这里是产品的简介，内容平铺，一行显示</p>
+        <h1>{{dataList.name}}</h1>
+        <p>简介：{{dataList.description}}</p>
         <br>
         <p>
-          <span>iOS 包名 ：com.persagy.meos</span>
-          <span>Android 包名 ：com.persagy.app</span>
+          <span>iOS 包名 ：{{dataList.packageName?dataList.packageName.ios:''}}</span>
+          <span>Android 包名 ：{{dataList.packageName?dataList.packageName.android:''}}</span>
         </p>
         <p>
-          <span>iOS Key ：f3277aae34abd1e405b68858a4c5849e</span>
-          <span>Android Key ：f3277aae34abd1e405b68858a4c5849e</span>
+          <!-- <span>iOS Key ：f3277aae34abd1e405b68858a4c5849e</span>
+          <span>Android Key ：f3277aae34abd1e405b68858a4c5849e</span>-->
+          <span>Key ：{{dataList.id}}</span>
         </p>
       </div>
     </div>
@@ -51,13 +57,30 @@
     <Modal
       class="delete"
       v-model="modal_delete"
-      @on-ok="modal_delete=false"
-      @on-cancel="modal_delete=false"
       width="580"
-      :styles="{top: '2.7rem'}">
+      :styles="{top: '2.7rem'}"
+    >
       <Icon class="ivu-icon-ios-alert-outline"/>
-      <p>确定删除该版本？</p>
+      <p  class="title">确定删除该版本？</p>
       <p>删除后，该版本信息将不存在，用户无法继续使用</p>
+      <div class="delete_btns">
+        <Button type='primary' @click="modal_delete=false">发布</Button>
+        <Button @click="modal_delete=false">取消</Button>
+      </div>
+    </Modal>
+    <Modal
+      class="delete"
+      v-model="modal_publish"
+      width="580"
+      :styles="{top: '2.7rem'}"
+    >
+      <div class="publish_img"></div>
+      <p class="title">确定发布新版本</p>
+      <p>安装包名发布后将无法修改</p>
+      <div class="delete_btns">
+        <Button type='primary' @click="modal_publish=false">发布</Button>
+        <Button  @click="modal_publish=false">取消</Button>
+      </div>
     </Modal>
     <Drawer
       class="new_version_drawer"
@@ -66,14 +89,50 @@
       width="390"
       :mask-closable="true"
     >
-      <div class="center">
-        <Upload action="//jsonplaceholder.typicode.com/posts/" :show-upload-list="true">
+      <div class="center" v-if="showUpload">
+        <Upload
+          multiple
+          action="/api/upload"
+          :show-upload-list="true"
+          :before-upload="handleBefore"
+          :data="{'jsonString': JSON.stringify([{
+            fileName: '11',
+            fileSuffix: 'apk',
+            subdirectory: '/abc'
+          }])}"
+          :format="['ipa','apk']"
+          :on-format-error="handleFormatError"
+          :on-success="handleSuccess"
+        >
           <Button type="primary" icon="md-cloud-upload" ghost>点击上传安装包</Button>
         </Upload>
         <p>* 必须上传，仅支持ipa或apk文件</p>
         <div class="btns">
-          <Button type="primary" @click="newVersion = false">保存并发布</Button>
+          <Button type="primary" @click="nextStep">下一步</Button>
           <Button style="margin-right: 8px" @click="newVersion = false">取消</Button>
+        </div>
+      </div>
+      <div class="nextStep" v-else>
+        <p class="nextStep_title">版本类型：</p>
+        <RadioGroup v-model="newVersionParmer.appTypeId">
+          <Radio label="ios">
+            <Icon type="logo-apple"></Icon>
+            <span>ios</span>
+          </Radio>
+          <Radio label="android">
+            <Icon type="logo-android"></Icon>
+            <span>Android</span>
+          </Radio>
+        </RadioGroup>
+        <p class="nextStep_title">版本号：</p>
+        <Input v-model="newVersionParmer.number" placeholder="" style="width: 330px;height:40px" />
+        <p class="nextStep_title">版本编码：</p>
+        <Input v-model="newVersionParmer.build" placeholder="" style="width: 330px;height:40px" />
+        <p class="nextStep_title">更新说明（选填）：</p>
+        <Input v-model="newVersionParmer.remark" large type="textarea" placeholder="" style="width: 330px;height:100px" />
+        <div class="btns">
+          <Button type="primary" @click="modal_publish=true">保存并发布</Button>
+          <Button style="margin-right: 8px"  @click="newVersion = false;showUpload=true">取消</Button>
         </div>
       </div>
     </Drawer>
@@ -81,16 +140,30 @@
 </template>
 
 <script>
+import axios from "axios";
+import qs from "qs";
 import echarts from "echarts";
 export default {
   data() {
     return {
+      appKey: "",
+      dataList: {},
       name: false,
-      newVersion: false,
+      newVersion: false, //右侧抽屉
+      appTypeId: "ios",
+      showUpload: true, //显示抽屉中 上传框 或者 编辑框
+      newVersionParmer: {
+        appId: '',
+        appTypeId: 'ios',
+        number: '1.0',
+        build: '11',
+        remark: '123',
+        resourceId: ''
+      },
       columnsIOS: [
         {
           title: "版本",
-          key: "version"
+          key: "number"
         },
         {
           title: "Build",
@@ -102,11 +175,12 @@ export default {
         },
         {
           title: "下载次数",
-          key: "count"
+          key: "downloadTimes"
         },
         {
           title: "更新时间",
-          key: "time"
+          key: "updateTime",
+          width: 150
         },
         {
           title: "操作",
@@ -188,7 +262,7 @@ export default {
       columnsAndroid: [
         {
           title: "版本",
-          key: "version"
+          key: "number"
         },
         {
           title: "Build",
@@ -200,11 +274,12 @@ export default {
         },
         {
           title: "下载次数",
-          key: "count"
+          key: "downloadTimes"
         },
         {
           title: "更新时间",
-          key: "time"
+          key: "updateTime",
+          width: 150
         },
         {
           title: "操作",
@@ -283,31 +358,10 @@ export default {
           }
         }
       ],
-      dataIOS: [
-        {
-          version: "1.0",
-          build: "333",
-          size: "15.2k",
-          count: "22",
-          time: "2019-1-2"
-        },
-        {
-          version: "1.0",
-          build: "333",
-          size: "15.2k",
-          count: "22",
-          time: "2019-1-2"
-        },
-        {
-          version: "1.0",
-          build: "333",
-          size: "15.2k",
-          count: "22",
-          time: "2019-1-2"
-        }
-      ],
+      dataIOS: [],
       dataAndroid: [],
       modal_delete: false,
+      modal_publish: false,
       option: {
         tooltip: {
           trigger: "item",
@@ -402,14 +456,99 @@ export default {
           {
             data: [120, 200, 150, 80, 70, 110, 130],
             type: "bar",
-            color: ["#619FF5", "#6B6BE5", "#E6C248", "#3FB9E3", "#E67C48"],
+            color: ["#619FF5", "#6B6BE5", "#E6C248", "#3FB9E3", "#E67C48"]
           }
         ]
-      }
+      },
+      uploadData: {}
     };
   },
   components: {},
+  watch: {
+    $route: "getParameter"
+  },
+  methods: {
+    getParameter() {
+      this.appKey = this.$route.query.id;
+      if (this.appKey) {
+        axios
+          .post(
+            "/api/AppGetService",
+            qs.stringify({ jsonString: JSON.stringify({ id: this.appKey }) })
+          )
+          .then(res => {
+            this.dataList = res.data.content;
+            // console.log(this.dataList);
+          })
+          .catch(err => console.log(err));
+
+        this.getVersion();
+      }
+    },
+    getVersion() {
+      // 版本列表
+      axios
+        .post(
+          "/api/VersionListService",
+          qs.stringify({
+            jsonString: JSON.stringify({ appId: this.appKey, appTypeId: "ios" })
+          })
+        )
+        .then(res => {
+          if (res.data.result == "success") {
+            this.dataIOS = res.data.content;
+          }
+          console.log(res.data.content);
+        })
+        .catch(err => console.log(err));
+      axios
+        .post(
+          "/api/VersionListService",
+          qs.stringify({
+            jsonString: JSON.stringify({
+              appId: this.appKey,
+              appTypeId: "android"
+            })
+          })
+        )
+        .then(res => {
+          if (res.data.result == "success") {
+            this.dataAndroid = res.data.content;
+          }
+          // console.log(res.data.content);
+        })
+        .catch(err => console.log(err));
+    },
+    //上传前的参数
+    handleBefore() {
+      this.uploadData = qs.stringify({
+        jsonString: JSON.stringify({
+          fileName: "11",
+          fileSuffix: "apk",
+          subdirectory: "/abc"
+        })
+      });
+    },
+    //上传安装包成功回调
+    handleSuccess() {
+      console.log("上传成功");
+    },
+    //上传安装包 格式不对 回调
+    handleFormatError() {
+      console.log("格式不正确");
+    },
+    //下载地址 9fbf20ec-bb25-4f50-a0b1-4720a89150f1
+    //http://172.16.2.25:8888/saas-version-app/Spring/MVC/entrance/unifier/download?resource=e250c54b-a299-4c45-84bd-4feb8ca76fbf
+//http://172.16.2.25:8888/saas-version-app/Spring/MVC/entrance/unifier/download?resource=9fbf20ec-bb25-4f50-a0b1-4720a89150f1
+
+    //下一步
+    nextStep() {
+      this.showUpload = false;
+    }
+  },
   mounted() {
+    this.getParameter();
+
     var chart1 = echarts.init(this.$refs.chart1);
     chart1.setOption(this.option);
 
@@ -524,20 +663,36 @@ export default {
   padding-top: 0.6rem;
 }
 .delete .ivu-modal-body p {
-  font-size: 0.14rem;
+  font-size: 0.13rem;
+  color: #6D6D6D;
 }
-.delete .ivu-modal-footer {
-  padding-top: 0.2rem;
+.delete .ivu-modal-body p.title{
+  font-size: 0.14rem;
+  color: #3E3E3E;
+}
+.delete .ivu-modal-footer{
+  display: none;
+}
+.delete .delete_btns {
+  padding-top: 0.4rem;
   padding-bottom: 0.6rem;
   border-top: none;
   text-align: center;
 }
-.delete .ivu-modal-footer button {
+.delete .delete_btns button {
   width: 1.2rem;
   margin: 0 0.15rem;
 }
-.delete .ivu-modal-footer .ivu-btn-text {
+.delete .delete_btns .ivu-btn-text {
   border: 1px solid #c0c0c0;
+}
+.delete .publish_img{
+  display: inline-block;
+  margin-bottom: 16px;
+  width: 70px;
+  height: 82px;
+  background: url("../../assets/img/publish.png") no-repeat;
+  background-size: 100%;
 }
 /* 上传新版本抽屉 */
 .new_version_drawer .center {
@@ -546,6 +701,16 @@ export default {
   top: 50%;
   width: calc(100% - 0.32rem);
   transform: translateY(-50%);
+}
+.new_version_drawer .ivu-drawer-body{
+  padding: 30px;
+}
+.new_version_drawer .nextStep {
+}
+.nextStep_title{
+  font-size: 16px;
+  color: #363F80;
+  padding: 14px 0;
 }
 .new_version_drawer .center .btns {
   margin-top: 0.6rem;
@@ -562,7 +727,7 @@ export default {
   text-align: center;
   margin-top: 0.2rem;
 }
-.new_version_drawer .center .ivu-icon {
+.new_version_drawer .center .ivu-icon-md-cloud-upload {
   font-size: 22px;
   line-height: 1;
 }
@@ -588,7 +753,7 @@ export default {
 .charts .up .l,
 .charts .down .l {
   width: 5.3rem;
-  border-right: 1px solid #E7E7E7;
+  border-right: 1px solid #e7e7e7;
 }
 .charts .up .r,
 .charts .down .r {
