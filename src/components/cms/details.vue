@@ -7,7 +7,8 @@
   <div class="details">
     <div class="header">
       <div class="logo">
-        <img src alt>
+        <!-- <img ref="logo" :src="'http://172.16.0.110:8888/saas-version-app/Spring/MVC/entrance/unifier/download?resource='+dataList.picture"> -->
+        <img ref="logo">
       </div>
       <div class="header_body">
         <h1>{{dataList.name}}</h1>
@@ -36,7 +37,7 @@
             <Table stripe :columns="columnsIOS" :data="dataIOS"></Table>
           </TabPane>
           <TabPane label="Android">
-            <Table stripe :columns="columnsAndroid" :data="dataIOS"></Table>
+            <Table stripe :columns="columnsAndroid" :data="dataAndroid"></Table>
           </TabPane>
         </Tabs>
       </Card>
@@ -58,13 +59,12 @@
       class="delete"
       v-model="modal_delete"
       width="580"
-      :styles="{top: '2.7rem'}"
-    >
+      :styles="{top: '2.7rem'}">
       <Icon class="ivu-icon-ios-alert-outline"/>
       <p  class="title">确定删除该版本？</p>
       <p>删除后，该版本信息将不存在，用户无法继续使用</p>
       <div class="delete_btns">
-        <Button type='primary' @click="modal_delete=false">发布</Button>
+        <Button type='primary' @click="delVersion">删除</Button>
         <Button @click="modal_delete=false">取消</Button>
       </div>
     </Modal>
@@ -87,8 +87,7 @@
       title="上传新版本"
       v-model="newVersion"
       width="390"
-      :mask-closable="true"
-    >
+      :mask-closable="true">
       <div class="center" v-if="showUpload">
         <Upload
           multiple
@@ -108,7 +107,7 @@
         </Upload>
         <p>* 必须上传，仅支持ipa或apk文件</p>
         <div class="btns">
-          <Button type="primary" @click="nextStep">下一步</Button>
+          <Button type="primary" @click="nextStep" :disabled="!tempPackId">下一步</Button>
           <Button style="margin-right: 8px" @click="newVersion = false">取消</Button>
         </div>
       </div>
@@ -131,8 +130,38 @@
         <p class="nextStep_title">更新说明（选填）：</p>
         <Input v-model="newVersionParmer.remark" large type="textarea" placeholder="" style="width: 330px;height:100px" />
         <div class="btns">
-          <Button type="primary" @click="modal_publish=true">保存并发布</Button>
+          <Button type="primary" @click="saveAndPublish">保存并发布</Button>
           <Button style="margin-right: 8px"  @click="newVersion = false;showUpload=true">取消</Button>
+        </div>
+      </div>
+    </Drawer>
+    <Drawer
+      class="new_version_drawer"
+      title="编辑应用信息"
+      v-model="editVersion"
+      width="390"
+      :mask-closable="true">
+      <div class="nextStep">
+        <p class="nextStep_title">版本类型：</p>
+        <RadioGroup v-model="editVersionParmers.appTypeId">
+          <Radio label="ios">
+            <Icon type="logo-apple"></Icon>
+            <span>ios</span>
+          </Radio>
+          <Radio label="android">
+            <Icon type="logo-android"></Icon>
+            <span>Android</span>
+          </Radio>
+        </RadioGroup>
+        <p class="nextStep_title">版本号：</p>
+        <Input v-model="editVersionParmers.number" placeholder="" style="width: 330px;height:40px" />
+        <p class="nextStep_title">版本编码：</p>
+        <Input v-model="editVersionParmers.build" placeholder="" style="width: 330px;height:40px" />
+        <p class="nextStep_title">更新说明（选填）：</p>
+        <Input v-model="editVersionParmers.remark" large type="textarea" placeholder="" style="width: 330px;height:100px" />
+        <div class="btns">
+          <Button type="primary" @click="saveEditVersion">保存并发布</Button>
+          <Button style="margin-right: 8px"  @click="editVersion=false">取消</Button>
         </div>
       </div>
     </Drawer>
@@ -148,16 +177,22 @@ export default {
     return {
       appKey: "",
       dataList: {},
-      name: false,
-      newVersion: false, //右侧抽屉
+      name: "",
+      description: "",
+
+      tempPackId: "", //上传新版本的临时id
+      newVersion: false, //右侧抽屉 新版本
+      editVersion: false, //右侧抽屉 编辑版本
+      editVersionParmers: {}, //编辑版本数据
+      selVersionId: '',//删除时选中的版本id
       appTypeId: "ios",
       showUpload: true, //显示抽屉中 上传框 或者 编辑框
       newVersionParmer: {
         appId: '',
         appTypeId: 'ios',
-        number: '1.0',
-        build: '11',
-        remark: '123',
+        number: '',
+        build: '',
+        remark: '',
         resourceId: ''
       },
       columnsIOS: [
@@ -213,8 +248,7 @@ export default {
                   },
                   on: {
                     click: () => {
-                      // this.show(params.index);
-                      // this.modal_delete = true;
+                       this.editVersionBtn(params.row);
                     }
                   }
                 },
@@ -248,7 +282,7 @@ export default {
                   },
                   on: {
                     click: () => {
-                      // this.show(params.index);
+                      this.selVersionId = params.row.id;
                       this.modal_delete = true;
                     }
                   }
@@ -312,8 +346,7 @@ export default {
                   },
                   on: {
                     click: () => {
-                      // this.show(params.index);
-                      // this.modal_delete = true;
+                      this.editVersionBtn(params.row);
                     }
                   }
                 },
@@ -331,7 +364,7 @@ export default {
                   },
                   on: {
                     click: () => {
-                      this.remove(params.index);
+                      // this.remove(params.index);
                     }
                   }
                 },
@@ -347,7 +380,7 @@ export default {
                   },
                   on: {
                     click: () => {
-                      // this.show(params.index);
+                      this.selVersionId = params.row.id;
                       this.modal_delete = true;
                     }
                   }
@@ -471,38 +504,27 @@ export default {
     getParameter() {
       this.appKey = this.$route.query.id;
       if (this.appKey) {
-        axios
-          .post(
-            "/api/AppGetService",
-            qs.stringify({ jsonString: JSON.stringify({ id: this.appKey }) })
-          )
-          .then(res => {
-            this.dataList = res.data.content;
-            // console.log(this.dataList);
+        axios.post("/api/AppGetService",qs.stringify({ jsonString: JSON.stringify({ id: this.appKey }) })).then(res => {
+            this.dataList = res.data.content[0];
           })
           .catch(err => console.log(err));
-
         this.getVersion();
       }
     },
     getVersion() {
       // 版本列表
-      axios
-        .post(
+      axios.post(
           "/api/VersionListService",
           qs.stringify({
             jsonString: JSON.stringify({ appId: this.appKey, appTypeId: "ios" })
           })
-        )
-        .then(res => {
+        ).then(res => {
           if (res.data.result == "success") {
             this.dataIOS = res.data.content;
           }
-          console.log(res.data.content);
-        })
-        .catch(err => console.log(err));
-      axios
-        .post(
+          // console.log(res.data.content);
+        }).catch(err => console.log(err));
+      axios.post(
           "/api/VersionListService",
           qs.stringify({
             jsonString: JSON.stringify({
@@ -510,8 +532,7 @@ export default {
               appTypeId: "android"
             })
           })
-        )
-        .then(res => {
+        ).then(res => {
           if (res.data.result == "success") {
             this.dataAndroid = res.data.content;
           }
@@ -530,12 +551,15 @@ export default {
       });
     },
     //上传安装包成功回调
-    handleSuccess() {
-      console.log("上传成功");
+    handleSuccess(res) {
+      if (res.result == "success") {
+        this.tempPackId = res.content[0].id;
+        this.$Message.info("上传成功");
+      }
     },
     //上传安装包 格式不对 回调
     handleFormatError() {
-      console.log("格式不正确");
+      this.$Message.info("格式不正确");
     },
     //下载地址 9fbf20ec-bb25-4f50-a0b1-4720a89150f1
     //http://172.16.2.25:8888/saas-version-app/Spring/MVC/entrance/unifier/download?resource=e250c54b-a299-4c45-84bd-4feb8ca76fbf
@@ -544,7 +568,77 @@ export default {
     //下一步
     nextStep() {
       this.showUpload = false;
+    },
+    //新版本保存
+    saveAndPublish(){
+      var parmers = this.newVersionParmer;
+      parmers.appId = this.appKey;
+      parmers.resourceId = this.tempPackId;
+      var hasNull = false;
+      this.$Message.config({
+            top: 233,
+            duration: 3
+        });
+      Object.keys(parmers).forEach(key=>{
+        var item = parmers[key];
+        if (!parmers[key]) {
+          // console.log(key);
+            hasNull = true;
+          }
+      });
+      if (hasNull) {
+        this.$Message.info("请填全信息")
+          return;
+      }
+      axios.post("/api/VersionAddService",qs.stringify({
+            jsonString: JSON.stringify(parmers)
+          })).then(res => {
+          if (res.data.result == "success") {
+            this.$Message.success("添加版本成功");
+            this.newVersion = false;
+            this.getParameter();
+          }
+        })
+    },
+    //编辑版本信息
+    editVersionBtn(params){
+      this.editVersionParmers = params
+      // console.log(params);
+      this.editVersion = true;
+    },
+    //编辑版本信息 保存
+    saveEditVersion(){
+      // console.log(this.editVersionParmers);
+      this.editVersionParmers.resourceId = this.editVersionParmers.resource;
+      axios.post("/api/VersionUpdateService",qs.stringify({
+            jsonString: JSON.stringify(this.editVersionParmers)
+          })).then(res => {
+          if (res.data.result == "success") {
+            this.$Message.success("编辑版本成功");
+            this.editVersion = false;
+            this.getParameter();
+          }
+        })
+    },
+    //删除版本
+    delVersion(){
+      // console.log(this.selVersionId);
+      if (!this.selVersionId) {
+        return;
+      }
+      this.editVersionParmers.resourceId = this.editVersionParmers.resource;
+      axios.post("/api/VersionRemoveService",qs.stringify({
+            jsonString: JSON.stringify({id: this.selVersionId})
+          })).then(res => {
+          if (res.data.result == "success") {
+            this.$Message.success("删除版本成功");
+            this.modal_delete = false;
+            this.getParameter();
+          }
+        })
     }
+
+
   },
   mounted() {
     this.getParameter();

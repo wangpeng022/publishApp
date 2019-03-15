@@ -42,17 +42,7 @@
     </div>
     <div class="cont_body">
       <h2>版本说明</h2>
-      <!-- <Dropdown trigger="click" class="change_version">
-        <span>
-            请选择版本
-            <Icon type="ios-arrow-down"></Icon>
-        </span>
-        <DropdownMenu slot="list">
-            <DropdownItem>iPhone 版本</DropdownItem>
-            <DropdownItem>Android 版本</DropdownItem>
-        </DropdownMenu>
-      </Dropdown>-->
-      <Select v-model="defaultVer" class="change_version" style="width:130px">
+      <Select v-model="defaultVer" class="change_version" style="width:130px" @on-change="selectChange">
         <Option v-for="item in classList" :value="item.value" :key="item.value">{{ item.label }}</Option>
       </Select>
       <div class="cont_body_box">
@@ -96,6 +86,7 @@ import qs from "qs";
 export default {
   data() {
     return {
+      appKey: '',
       isWX: false,
       isAndroid: false,
       isIOS: false,
@@ -106,34 +97,49 @@ export default {
       copyValue: 'www.baidu.com',
       classList: [
         {
-          value: "iPhone 版本",
+          value: "ios",
           label: "iPhone 版本"
         },
         {
-          value: "Android 版本",
+          value: "android",
           label: "Android 版本"
         }
       ],
-      defaultVer: "iPhone 版本"
+      defaultVer: "ios"
     };
   },
   components: {
     drop
   },
   mounted() {
-    // axios.post('/api/ProductListService',qs.stringify({"jsonString": JSON.stringify({})})).then(res=>{
-    //   console.log(res.data.content);
-    // }).catch(err=>console.log(err));
-    var u = navigator.userAgent;
-    this.isWX = u.indexOf("MicroMessenger") > -1; //微信终端
-    this.isAndroid = u.indexOf("Android") > -1 || u.indexOf("Adr") > -1; //android终端
-    this.isIOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/); //ios终端
-    this.isIphone = u.indexOf("iPhone") > -1; //ios终端
+    // var u = navigator.userAgent;
+    // this.isWX = u.indexOf("MicroMessenger") > -1; //微信终端
+    // this.isAndroid = u.indexOf("Android") > -1 || u.indexOf("Adr") > -1; //android终端
+    // this.isIOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/); //ios终端
+    // this.isIphone = u.indexOf("iPhone") > -1; //ios终端
 
-    // console.log(this.$route.params.id);
-
+    console.log(this.$route.query.id);
+    this.appKey = this.$route.query.id;
+    this.getVersion('ios');
   },
   methods: {
+    selectChange(cur){
+      this.getVersion(cur);
+    },
+    // 查询所有版本信息
+    getVersion(appTypeId){
+      axios.post(
+          "/api/VersionListService",
+          qs.stringify({
+            jsonString: JSON.stringify({ appId: this.appKey, appTypeId: appTypeId })
+          })
+        ).then(res => {
+          if (res.data.result == "success") {
+            this.dataIOS = res.data.content;
+          }
+          console.log(res.data.content);
+        }).catch(err => console.log(err));
+    },
     //下载apk
     downFile(param) {
       this.$axios({
@@ -238,22 +244,6 @@ export default {
     saveCode(name) {
       //pc下载
       var img = document.getElementById("code_img");
-      // var f = document.createElement("iframe");
-      // f.style.display = "none";
-      // f.src = img.src;
-      // f.name = "aaa";
-      // document.body.appendChild(f);
-      // f.download = name || "项目二维码";
-      // console.log(f);
-      // setTimeout(() => {
-      //   window.frames["aaa"].document.execCommand("SaveAs");
-      // }, 100);
-
-      // var f = document.createElement("a");
-      // f.download = name || "项目二维码";
-      // f.href = img.src;
-      // f.click();
-
       const blob = new Blob([img.src], {
         type: "image/jpeg",
         data: "text/csv",

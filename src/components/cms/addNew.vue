@@ -8,10 +8,14 @@
     <p class="add_app_title">添加新应用</p>
     <Card class="add_app_body">
       <div class="add_app_center">
+        <p class="nextStep_title">选择产品线：</p>
+        <Select v-model="selProduct" style="width: 330px;" @on-change="selectChange">
+          <Option v-for="item in productList" :value="item.id" :key="item.id">{{ item.name }}</Option>
+        </Select>
         <p class="nextStep_title">名称：</p>
-        <Input v-model="newVersionParmer.number" placeholder style="width: 330px;height:40px"/>
+        <Input v-model="newAppParmer.name" placeholder='请填写名称' style="width: 330px;"/>
         <p class="nextStep_title">应用地址：</p>
-        <Input v-model="newVersionParmer.build" placeholder style="width: 330px;height:40px"/>
+        <Input v-model="newAppParmer.downloadUrl" placeholder style="width: 330px;"/>
         <p class="nextStep_title">应用图片：</p>
         <Upload
           ref="upload"
@@ -41,18 +45,18 @@
         </Upload>
         <p class="nextStep_title">应用简介（选填）：</p>
         <Input
-          v-model="newVersionParmer.remark"
+          v-model="newAppParmer.description"
           large
           type="textarea"
           placeholder="请简单介绍该应用"
           style="width: 330px;height:100px"
         />
         <p class="nextStep_title">ios 安装包名：</p>
-        <Input v-model="newVersionParmer.number" placeholder style="width: 330px;height:40px"/>
+        <Input v-model="newAppParmer.packageName.ios" placeholder style="width: 330px;"/>
         <p class="nextStep_title">android 安装包名：</p>
-        <Input v-model="newVersionParmer.number" placeholder style="width: 330px;height:40px"/>
+        <Input v-model="newAppParmer.packageName.android" placeholder style="width: 330px;"/>
         <div class="btns" style="text-align:center">
-          <Button type="primary" @click="modal_publish=true">完成</Button>
+          <Button type="primary" @click="addComplated">完成</Button>
         </div>
       </div>
     </Card>
@@ -60,17 +64,24 @@
 </template>
 
 <script>
+import axios from "axios";
+import qs from "qs";
 export default {
   data() {
     return {
-      newVersionParmer: {
-        appId: "",
-        appTypeId: "ios",
-        number: "1.0",
-        build: "11",
-        remark: "123",
-        resourceId: ""
+      newAppParmer: {
+        productId: "",
+        name: "",
+        downloadUrl: "",
+        picture: '',
+        description: "",
+        packageName: {
+          ios: "",
+          android: ""
+        },
       },
+      selProduct: '',//选中产品系
+      productList: [],//产品线列表
       iconUrl: '',
       imgName: "",
       visible: false,
@@ -81,7 +92,8 @@ export default {
   methods: {
     handleSuccess(res,file) {
       if (res.result=='success') {
-        this.iconUrl = "http://172.16.2.25:8888/saas-version-app/Spring/MVC/entrance/unifier/download?resource=" + res.content[0].id;
+        this.iconUrl = "http://172.16.0.110:8888/saas-version-app/Spring/MVC/entrance/unifier/download?resource=" + res.content[0].id;
+        this.newAppParmer.picture = res.content[0].id
       }
       // console.log(res,file,this.iconUrl,'11111');
     },
@@ -91,15 +103,71 @@ export default {
         desc:"文件" + file.name + "的格式不正确，请选择后缀名 jpg、jpeg 或 png 的文件。"
       });
     },
+    addComplated(){
+      this.$Message.config({
+            top: 233,
+            duration: 3
+        });
+        var hasNull = false;
+      this.newAppParmer.productId = selProduct;
+      Object.keys(this.newAppParmer).forEach(key=>{
+        var item = this.newAppParmer[key];
+        if (typeof(item)=='object') {
+          Object.keys(item).forEach(key=>{
+            if (!item[key]) {
+              hasNull = true;
+            }
+          })
+        }else{
+          if (!this.newAppParmer[key]) {
+              hasNull = true;
+            }
+        }
+      });
+      if (hasNull) {
+        this.$Message.info("请填全信息")
+          return;
+      }
+      axios.post("/api/AppAddService",qs.stringify({
+            jsonString: JSON.stringify(this.newAppParmer)
+          })).then(res => {
+          if (res.data.result == "success") {
+            // todo
+          }
+          console.log(res.data.content);
+        })
+        .catch(err => console.log(err));
+    },
+    // 获取产品系列表
+    ProductListService(){
+      axios.post("/api/ProductListService",qs.stringify({
+            jsonString: JSON.stringify({})
+          })).then(res => {
+          if (res.data.result == "success") {
+            this.productList = res.data.content;
+          }
+        })
+        .catch(err => console.log(err));
+    },
+    selectChange(item){
+      console.log(item);
+
+    }
+  },
+  mounted () {
+    this.ProductListService();
   }
 };
 </script>
 
 <style>
+.ivu-message-notice-content{
+  padding: 25px 70px;
+}
 .add_app {
   height: 100%;
   width: 100%;
-  padding: 45px 68px 0 20px;
+  padding: 45px 68px 10px 20px;
 }
 .add_app_title {
   position: relative;
@@ -149,8 +217,11 @@ export default {
   text-align: left;
   width: 330px;
 }
-.add_app_center .ivu-input-default{
+.add_app_center .ivu-input-default,.add_app_center .ivu-select-selection{
   height: 40px;
+}
+.add_app_center .ivu-select-selection .ivu-select-placeholder,.add_app_center .ivu-select-selection .ivu-select-selected-value{
+  line-height: 40px;
 }
 .add_app_center textarea.ivu-input{
   height: 100px;

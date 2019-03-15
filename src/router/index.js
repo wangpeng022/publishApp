@@ -13,10 +13,9 @@ Vue.use(Router)
 export default new Router({
   routes: [
     {
-      path: '/home/:id',
+      path: '/home',
       name: 'home',
       component: home,
-      // redirect: '/home/lasted'
     },
     {
       path: '/cms',

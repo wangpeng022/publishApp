@@ -5,21 +5,18 @@
 ******************************************/
 <template>
   <div class="gather_content">
-    <div class="header"></div>
+    <div class="header">
+      <!-- <img ref="logo" :src="'http://172.16.0.110:8888/saas-version-app/Spring/MVC/entrance/unifier/download?resource='+dataList.picture"> -->
+      <img ref="logo">
+    </div>
     <div class="gather_content_body">
-      <h2>meos系列产品</h2>
-      <Select v-model="defaultVer" class="change_version" style="width:130px">
-        <Option v-for="item in classList" :value="item.value" :key="item.value">{{ item.label }}</Option>
+      <h2>{{title}}</h2>
+      <Select v-model="selProduct" class="change_version" style="width:130px" @on-change="changeTitle">
+        <Option v-for="item in productList" :value="item.id" :key="item.id">{{ item.name }}</Option>
       </Select>
       <div class="gather_content_body_box">
-        <itemcard></itemcard>
-        <itemcard></itemcard>
-        <itemcard></itemcard>
-        <itemcard></itemcard>
-        <itemcard></itemcard>
-        <itemcard></itemcard>
-        <itemcard></itemcard>
-        <itemcard></itemcard>
+
+        <itemcard v-for="item in dataList" :key="item.id" :dataObj="item"></itemcard>
 
       </div>
     </div>
@@ -31,9 +28,11 @@
 </template>
 
 <script>
-import drop from "../base/drop";
+// import drop from "../base/drop";
 import itemcard from "../base/itemcard";
 import QRCode from "qrcode";
+import axios from "axios";
+import qs from "qs";
 export default {
   data() {
     return {
@@ -41,21 +40,14 @@ export default {
       isAndroid: false,
       isIOS: false,
       isIphone: false,
-      classList: [
-        {
-          value: "切换系列",
-          label: "切换系列"
-        },
-        {
-          value: "Android 版本",
-          label: "Android 版本"
-        }
-      ],
-      defaultVer: "切换系列"
+      productList: [],
+      selProduct: "",//选中产品线id
+      title: '产品线',
+      dataList: []
     };
   },
   components: {
-    drop,itemcard
+    itemcard
   },
   mounted() {
     var u = navigator.userAgent;
@@ -65,51 +57,42 @@ export default {
     this.isIphone = u.indexOf("iPhone") > -1; //ios终端
 
     // console.log(this.$route.params.id);
+    this.ProductListService();
 
   },
   methods: {
-    //下载apk
-    downFile(param) {
-      this.$axios({
-        responseType: "arraybuffer",
-        method: "post",
-        url: publicu + "unifier/FNCenterRecordPrePayGridService",
-        data: qs.stringify({ jsonString: JSON.stringify(param) }),
-        responseType: "blob"
-      })
-        .then(res => {
-          const filename = decodeURI(
-            res.headers["content-disposition"]
-              .split(";")
-              .filter(item => item.indexOf("filename") >= 0)[0]
-              .split("=")[1]
-              .replace(/\"/g, "")
-          );
-          const blob = new Blob([res.data], {
-            type: "application/vnd.android",
-            data: "text/csv",
-            charset: "utf-8"
-          });
-          if ("download" in document.createElement("a")) {
-            // 非IE下载
-            const elink = document.createElement("a");
-            elink.download = filename;
-            elink.style.display = "none";
-            elink.href = URL.createObjectURL(blob);
-            document.body.appendChild(elink);
-            elink.click();
-            URL.revokeObjectURL(elink.href); // 释放URL 对象
-            document.body.removeChild(elink);
-          } else {
-            // IE10+下载
-            navigator.msSaveBlob(blob, filename);
+     // 获取产品系列表
+    ProductListService(){
+      axios.post("/api/ProductListService",qs.stringify({
+            jsonString: JSON.stringify({})
+          })).then(res => {
+          if (res.data.result == "success") {
+            this.productList = res.data.content;
+            this.selProduct = this.productList[0].id;
+            this.title = this.productList[0].name;
           }
-        })
-        .catch(ex => {
-          console.log(ex);
-        });
-    },
+        }).then(()=>{
+          this.AppDownloadListService()
+        }).catch(err => console.log(err));
 
+
+    },
+    // 获取产品线下的最新apps
+    AppDownloadListService(){
+      axios.post("/api/AppDownloadListService",qs.stringify({
+            jsonString: JSON.stringify({productId: this.selProduct})
+          })).then(res => {
+          if (res.data.result == "success") {
+            this.dataList = res.data.content;
+            // console.log(this.dataList);
+          }
+        }).catch(err => console.log(err))
+    },
+    // 切换产品线
+    changeTitle(){
+      this.title = this.productList.filter(key=>key.id==this.selProduct)[0].name;
+      this.AppDownloadListService();
+    },
     //动态生成二维码
     useqrcode() {
       //生成的二维码内容，可以添加变量
@@ -159,14 +142,10 @@ export default {
         rendererOpts: {
           quality: 0.3
         }
-      })
-        .then(url => {
+      }).then(url => {
           console.log(url);
           this.$refs.code.src = url;
-        })
-        .catch(err => {
-          console.error(err);
-        });
+        }).catch(err => {console.error(err);});
     },
     //保存二维码
     saveCode(name) {
@@ -271,6 +250,7 @@ export default {
   font-size: 28px;
   color: #363f80;
   letter-spacing: 0;
+  height: 42px;
 }
 .gather_content_body_box{
   display: flex;

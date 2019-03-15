@@ -11,18 +11,18 @@ module.exports = {
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
     proxyTable: {
-      '/api': {  
-        target: 'http://172.16.2.25:8888/saas-version-app/Spring/MVC/entrance/unifier',
-        secure: false,  
-        changeOrigin: true,  
+      '/api': {
+        target: 'http://172.16.0.110:8888/saas-version-app/Spring/MVC/entrance/unifier',
+        secure: false,
+        changeOrigin: true,
         pathRewrite: {
-            '^/api': '' 
-        }              
+            '^/api': ''
+        }
     }
     },
 
     // Various Dev Server settings
-    host: '172.16.2.196', // can be overwritten by process.env.HOST
+    host: '192.168.100.84', // can be overwritten by process.env.HOST
     port: 8080, // can be overwritten by process.env.PORT, if port is in use, a free one will be determined
     autoOpenBrowser: false,
     errorOverlay: true,
@@ -32,7 +32,7 @@ module.exports = {
     clientLogLevel: 'warning',
     https: true,
 
-    
+
     /**
      * Source Maps
      */
