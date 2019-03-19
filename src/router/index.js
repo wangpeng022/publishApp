@@ -4,6 +4,7 @@ import home from '@/components/home'
 import cms from '@/components/cms'
 import details from '@/components/cms/details'
 import addNew from '@/components/cms/addNew'
+import addProduct from '@/components/cms/addProduct'
 import gather from '@/components/gather'
 import mobile from '@/components/mobile'
 import gather_mobile from '@/components/gather_mobile'
@@ -30,6 +31,10 @@ export default new Router({
         {
           path: 'addNew',
           component: addNew
+        },
+        {
+          path: 'addProduct',
+          component: addProduct
         }
       ]
     },

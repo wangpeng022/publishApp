@@ -8,7 +8,7 @@
     <div class="left">
         <div class="logo"></div>
         <div class="add_button">
-            <div class="add" @click="addNew">
+            <div class="add" @click="addProduct">
                 <i>+</i>
                 <span> 产品线</span>
             </div>
@@ -56,6 +56,9 @@ export default {
    methods: {
        addNew(){
            this.$router.push('/cms/addNew')
+       },
+       addProduct(){
+           this.$router.push('/cms/addProduct')
        },
        menuChange(id){
         console.log(id);

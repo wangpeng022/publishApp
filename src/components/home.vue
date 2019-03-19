@@ -244,24 +244,20 @@ export default {
     saveCode(name) {
       //pc下载
       var img = document.getElementById("code_img");
-      const blob = new Blob([img.src], {
-        type: "image/jpeg",
-        data: "text/csv",
-        charset: "utf-8"
-      });
       if ("download" in document.createElement("a")) {
         // 非IE下载
-        const elink = document.createElement("a");
+        const elink = "二维码".createElement("a");
         elink.download = "123";
         elink.style.display = "none";
-        elink.href = URL.createObjectURL(blob);
+        // elink.href = URL.createObjectURL(blob);
+        elink.href = img.src;
         document.body.appendChild(elink);
         elink.click();
         URL.revokeObjectURL(elink.href); // 释放URL 对象
         document.body.removeChild(elink);
       } else {
         // IE10+下载
-        navigator.msSaveBlob(blob, 111);
+        navigator.msSaveBlob(img.src, "二维码");
       }
     },
     // 复制链接成功后的回调
